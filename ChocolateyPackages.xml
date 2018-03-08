@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<packages>
+  <package id="dotnet4.5.2" version="" displayname="" directoryname="" arguments=""/>
+  <package id="vcredist2013" version="" displayname="Microsoft Visual C++ 2013 Redistributable" directoryname="" arguments=""/>
+  <package id="chocolatey-core.extension" version=""  displayname="" directoryname="" arguments=""/>
+  <package id="jdk8" version=""  displayname="Java SE Development Kit 8" directoryname="Java8" arguments="&quot;installdir={INSTALLPATH}&quot;"/>
+  <package id="android-sdk" version=""  displayname="" directoryname="Android\Sdk" arguments=""/>
+  <package id="androidstudio" version=""  displayname="Android Studio" directoryname="" arguments="&quot;/PinnedToTaskbar:true /AddToDesktop:true&quot;"/>
+  <!-- <package id="androidstudio" version=""  displayname="Android Studio" directoryname="Android\Ide" arguments="&quot;/PinnedToTaskbar:false /AddToDesktop:false&quot;"/> -->
+  <package id="git.install" version=""  displayname="Git version" directoryname="" arguments="&quot;/GitAndUnixToolsOnPath /WindowsTerminal&quot;"/>
+  <!-- <package id="git.install" version=""  displayname="Git version" directoryname="Git" arguments="&quot;/GitAndUnixToolsOnPath /WindowsTerminal /NoShellIntegration&quot;"/> -->
+  <package id="visualstudiocode" version=""  displayname="Microsoft Visual Studio Code" directoryname="" arguments=""/>
+  <!-- <package id="visualstudiocode" version=""  displayname="Microsoft Visual Studio Code" directoryname="VSCode" arguments="&quot;/NoDesktopIcon /NoQuicklaunchIcon /NoContextMenuFiles /NoContextMenuFolders&quot;"/> -->
+  <package id="nodejs.install" version="7.0.0"  displayname="Node.js" directoryname="NodeJs" arguments=""/>
+  <package id="nvm.portable" version=""  displayname="" directoryname="Nvm" arguments=""/>
+  <!-- <package id="python2" version="2.7.14"  displayname="" directoryname="Python2" arguments="&quot;/InstallDir:{INSTALLPATH}&quot;"/> -->
+  <package id="python3" version="3.5.4"  displayname="Python 3.5.4" directoryname="Python3" arguments="&quot;/InstallDir:{INSTALLPATH}&quot;"/>
+  <package id="appium-desktop" version=""  displayname="Appium 1.2.7" directoryname="Appium" arguments=""/>
+  <!-- <package id="pip" version="1.2.0"  displayname="" directoryname="" arguments=""/> -->
+  <package id="docker-for-windows" version=""  displayname="Docker" directoryname="Docker" arguments=""/>
+</packages>
