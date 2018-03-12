@@ -5,20 +5,24 @@ Xenial project test cases.
 
 .DESCRIPTION
 This script performs the installation and configuration in silent mode of the following programs:
-- Java SE Development Kit 8 Update 162
+- Java SE Development Kit 8 Update 162 8.0.1620.12
 - Android SDK (Includes the minimum packages required.)
-- Android Studio
+- Android Studio 3.0.1
 - NodeJs 7.0.0
 - Git 2.16.1.4
 - SourceTree 2.4.7
-- Microsoft Visual C++ 2013 Redistributable
+- Microsoft Visual C++ 2013 Redistributable 12.0.30501
 - Python 3.5.4
-- Microsoft Visual Studio Code 1.20.0
+- Microsoft Visual Studio Code 1.20.0 (Includes the minimum extensions required.)
 - Pycharm Community 2017.3.3
 - Appium 1.3.2
 - MongoDb 3.6.2
-- Docker for Windows
+- MongoDb Compass Community 1.12.1
+- Docker for Windows 17.12.0-ce-win47
 - Sysinternals Suite
+- Vysor 1.8.5
+- Universal ADB Drivers 1.0.4
+- ConEmu 18.03.09
 
 Additionally this script clones and preconfigures the following repositories:
 - https://bit.heartlandcommerce.com/scm/hc/tea-data-management-ui.git'
@@ -99,7 +103,7 @@ param
 # Begin General Functions #
 ###########################
 # Validate if the Path is valid
-Function Validate-Paths
+Function ValidatePaths
 {
     param
     (
@@ -120,7 +124,7 @@ Function Validate-Paths
 
 
 # Validate if the Path exist in the system
-Function Exists-Paths
+Function ExistsPaths
 {
     param
     (
@@ -142,7 +146,7 @@ Function Exists-Paths
 
 
 # Validate if Windows Service exists
-Function Exists-Service
+Function ExistsService
 {
     param
     (
@@ -193,15 +197,15 @@ Function IsURIWeb
 }
 
 
-Function Prepare-Directory
+Function PrepareDirectory
 {
     param
     (
         [parameter(Mandatory=$true, Position=0)][string] $DirectoryPath
     )
 
-    Validate-Paths $DirectoryPath;
-    if (-not (Exists-Paths $DirectoryPath $true))
+    ValidatePaths $DirectoryPath;
+    if (-not (ExistsPaths $DirectoryPath $true))
     {
         Write-Host "Proceeding to create $DirectoryPath.";
         New-Item -Type Directory -Path $DirectoryPath -Force | Out-Null;
@@ -231,20 +235,21 @@ Function Update-SessionEnvironment
     }
     $UserName = $Env:UserName;
     $Architecture = $Env:Processor_Architecture;
+    $Path = $Env:Path;
     $PsModulePath = $Env:PSModulePath;
     #Ordering is important here, $User comes after so we can override $Machine
     'Process', 'Machine', 'User' |
-        % { $Scope = $_
+        ForEach-Object { $Scope = $_
             Get-EnvironmentVariableNames -Scope $Scope |
-            % {
+            ForEach-Object {
                 Set-Item "Env:$($_)" -Value (Get-EnvironmentVariable -Name $_ -Scope $Scope)
             }
         };
     #Path gets special treatment b/c it munges the two together
     $Paths = 'Machine', 'User' |
-        % {
+        ForEach-Object {
             (Get-EnvironmentVariable -Name 'PATH' -Scope $_) -Split ';'
-        } | Select -Unique;
+        } | Select-Object -Unique;
     $Env:Path = $Paths -join ';';
     #PSModulePath is almost always updated by process, so we want to preserve it.
     $Env:PSModulePath = $PsModulePath;
@@ -420,7 +425,6 @@ Function UnInstall-EnvironmentVariablePath
     )
 
     Write-Host "Finding the Path to UnInstall: `'$PathToUnInstall`'.";
-    $OriginalPathToUnInstall = $PathToUnInstall;
     #Get the PATH variable
     $EnvPath = $Env:PATH;
     if ($EnvPath.ToLower().Contains($PathToUnInstall.ToLower()))
@@ -508,7 +512,6 @@ Function Install-EnvironmentVariablePath
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $IgnoredArguments
     )
 
-    $OriginalPathToInstall = $PathToInstall;
     #Get the PATH variable
     Update-SessionEnvironment $false;
     $EnvPath = $Env:PATH;
@@ -580,7 +583,7 @@ Function Get-UninstallRegistryKey
         $KeyPaths = $Keys | Select-Object -ExpandProperty PSPath;
         try
         {
-            [array]$FoundKey = Get-ItemProperty -Path $KeyPaths -ErrorAction Stop | ? { $_.DisplayName -like $SoftwareName };
+            [array]$FoundKey = Get-ItemProperty -Path $KeyPaths -ErrorAction Stop | Where-Object { $_.DisplayName -like $SoftwareName };
             $Success = $true;
         }
         catch
@@ -598,7 +601,7 @@ Function Get-UninstallRegistryKey
                 }
             }
             Write-Verbose "Skipping bad key: $BadKey";
-            [array]$Keys = $Keys | ? { $BadKey -NotContains $_.PsPath };
+            [array]$Keys = $Keys | Where-Object { $BadKey -NotContains $_.PsPath };
         }
         if ($Success)
         {
@@ -671,7 +674,7 @@ Function Install-PinnedTaskBarItem
             $Shell = New-Object -Com "Shell.Application";
             $Folder = $Shell.Namespace($Path);
             $Item = $Folder.ParseName((Split-Path $TargetFilePath -Leaf));
-            $ItemVerb = $Item.Verbs() | ? { $_.Name.Replace("&",[string]::Empty) -eq $Verb };
+            $ItemVerb = $Item.Verbs() | Where-Object { $_.Name.Replace("&",[string]::Empty) -eq $Verb };
             if($ItemVerb -eq $null)
             {
                 Write-Host "TaskBar verb not found for $Item. It may have already been pinned.";
@@ -795,8 +798,7 @@ Function Install-Shortcut
         }
         if ($PinToTaskbar)
         {
-            $ScFilename = $Path.FullName;
-            $PinVerb = (New-Object -com "Shell.Application").Namespace($(Split-Path -Parent $Path.FullName)).ParseName($(Split-Path -Leaf $Path.FullName)).Verbs() | ?{$_.Name -eq 'Pin to Tas&kbar'};
+            $PinVerb = (New-Object -com "Shell.Application").Namespace($(Split-Path -Parent $Path.FullName)).ParseName($(Split-Path -Leaf $Path.FullName)).Verbs() | Where-Object {$_.Name -eq 'Pin to Tas&kbar'};
             if ($PinVerb)
             {
                 $PinVerb.DoIt();
@@ -887,7 +889,7 @@ Function Start-ProcessInSilentMode
 }
 
 
-Function Unzip-File
+Function UnzipFile
 {
     param
     (
@@ -898,7 +900,7 @@ Function Unzip-File
     )
 
     Write-Host "Extracting $FileFullPath to $Destination.`r`n";
-    Prepare-Directory $Destination;
+    PrepareDirectory $Destination;
     if ([IntPtr]::Size -ne 4)
     {
         $FileFullPathNoRedirection = $FileFullPath -ireplace ([System.Text.RegularExpressions.Regex]::Escape([Environment]::GetFolderPath('System'))),(Join-Path $Env:SystemRoot 'SysNative');
@@ -951,7 +953,7 @@ Function Unzip-File
 }
 
 
-Function Download-File
+Function DownloadFile
 {
     param
     (
@@ -961,7 +963,7 @@ Function Download-File
     )
 
     $OutputFilename = Join-Path $Global:PathAppsTemp $Filename;
-    if (-not (Validate-Paths $OutputFilename) -and -not (Exists-Paths $OutputFilename))
+    if (-not (ValidatePaths $OutputFilename) -and -not (ExistsPaths $OutputFilename))
     {
         Write-Host "Downloading File in $OutputFilename.";
         Write-Host "Downloading File from $Url.";
@@ -1015,10 +1017,10 @@ Function Ping-Machine
     Write-Verbose "Beginning Ping monitoring of $Computer for $Count tries:";
     While ($Count -gt 0)
     {
-        $Ping = Get-WmiObject Win32_PingStatus -Filter "Address = '$Computer'" | Select @{ Label="TimeStamp"; Expression={Get-Date}},@{Label="Source"; Expression={ $_.__Server }},@{Label="Destination"; Expression={ $_.Address }},IPv4Address,@{Label="Status"; Expression={ If ($_.StatusCode -ne 0) {"Failed"} Else {""}}},ResponseTime;
-        $Result = $Ping | Select TimeStamp,Source,Destination,IPv4Address,Status,ResponseTime;
+        $Ping = Get-WmiObject Win32_PingStatus -Filter "Address = '$Computer'" | Select-Object @{ Label="TimeStamp"; Expression={Get-Date}},@{Label="Source"; Expression={ $_.__Server }},@{Label="Destination"; Expression={ $_.Address }},IPv4Address,@{Label="Status"; Expression={ If ($_.StatusCode -ne 0) {"Failed"} Else {""}}},ResponseTime;
+        $Result = $Ping | Select-Object TimeStamp,Source,Destination,IPv4Address,Status,ResponseTime;
         $Response.Add($Result) | Out-Null;
-        Write-verbose ($Ping | Select TimeStamp,Source,Destination,IPv4Address,Status,ResponseTime | Format-Table -AutoSize | Out-String);
+        Write-verbose ($Ping | Select-Object TimeStamp,Source,Destination,IPv4Address,Status,ResponseTime | Format-Table -AutoSize | Out-String);
         $Count --;
         Start-Sleep -Seconds 1;
     }
@@ -1027,7 +1029,7 @@ Function Ping-Machine
 
 
 
-Function Calculate-ResponseTime
+Function CalculateResponseTime
 {
     param
     (
@@ -1080,14 +1082,14 @@ if ([System.IntPtr]::Size -eq 4)
     exit -12345;
 }
 $PathInstall = $PathInstall.Trim();
-Validate-Paths $PathInstall;
+ValidatePaths $PathInstall;
 if ($PathInstall.Contains(' '))
 {
     Write-Host "`r`nERROR: The Path to install application contains spaces. `'$PathInstall`'" -ForegroundColor Yellow -BackgroundColor Red;
     exit -12345;
 }
 $PathRepository = $PathRepository.Trim();
-Validate-Paths $PathRepository;
+ValidatePaths $PathRepository;
 if ($PathRepository.Contains(' '))
 {
     Write-Host "`r`nERROR: The Path to clone repository contains spaces. `'$PathRepository`'" -ForegroundColor Yellow -BackgroundColor Red;
@@ -1101,7 +1103,7 @@ if ($PathInstall.ToLower() -eq $PathRepository.ToLower())
 if ($UseSharedFolder)
 {
     $PingAtalanta = Ping-Machine "atalanta" 4;
-    if ((Calculate-ResponseTime $PingAtalanta) -lt 5)
+    if ((CalculateResponseTime $PingAtalanta) -lt 5)
     {
         Write-Host "Using \\atalanta\Temporal\EMantillaS\Xenial to download setup files.";
         $RepositoryLocal = '\\atalanta\Temporal\EMantillaS\Xenial';
@@ -1109,7 +1111,7 @@ if ($UseSharedFolder)
     else
     {
         $PingAtlas = Ping-Machine "atlas" 4;
-        if ((Calculate-ResponseTime $PingAtlas) -lt 5)
+        if ((CalculateResponseTime $PingAtlas) -lt 5)
         {
             Write-Host "Using \\atlas\Temporal\MAguilar\Xenial to download setup files.";
             $RepositoryLocal = '\\atlas\Temporal\MAguilar\Xenial';
@@ -1146,8 +1148,8 @@ if ([string]::IsNullOrEmpty($Global:RoboCopy))
     Write-Host "`r`nERROR: Robocopy.exe no found in $Env:SystemRoot\System32." -ForegroundColor Yellow -BackgroundColor Red;
     exit -12345;
 }
-Prepare-Directory $PathInstall;
-Prepare-Directory $Global:PathAppsTemp;
+PrepareDirectory $PathInstall;
+PrepareDirectory $Global:PathAppsTemp;
 
 
 
@@ -1173,7 +1175,7 @@ if ($Key -eq $null)
         $Headers = @{ 'Cookie' = 'gpw_e24=http://www.oracle.com; oraclelicense=accept-securebackup-cookie' };
         $UrlFile = 'http://download.oracle.com/otn-pub/java/jdk/8u162-b12/0da788060d494f5095bf8624735fa2f1/jdk-8u162-windows-x64.exe';
     }
-    $JdkFile = Download-File 'jdk-8u162-windows-x64.exe' $UrlFile $Headers;
+    $JdkFile = DownloadFile 'jdk-8u162-windows-x64.exe' $UrlFile $Headers;
     $InstallOptions = '/s STATIC=1 ADDLOCAL="ToolsFeature,SourceFeature" INSTALLDIR="' + $JavaDir + '"';
     if (-not ([string]::IsNullOrEmpty($JdkFile)))
     {
@@ -1208,9 +1210,9 @@ Write-Host "###########################################";
 Write-Host "# Processing installation of Android SDK. #";
 Write-Host "###########################################";
 $AndroidDir = Join-Path $PathInstall 'Android';
-Prepare-Directory $AndroidDir;
+PrepareDirectory $AndroidDir;
 $AndroidSdkDir = Join-Path $AndroidDir 'Sdk';
-Prepare-Directory $AndroidSdkDir;
+PrepareDirectory $AndroidSdkDir;
 if ($UseSharedFolder)
 {
     $UrlFile = $RepositoryLocal + '\sdk-tools-windows-4333796.zip';
@@ -1221,13 +1223,13 @@ else
 }
 if((Get-ChildItem $AndroidSdkDir -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Measure-Object).Count -eq 0)
 {
-    $AndroidSdkFile = Download-File 'sdk-tools-windows-4333796.zip' $UrlFile;
+    $AndroidSdkFile = DownloadFile 'sdk-tools-windows-4333796.zip' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($AndroidSdkFile)))
     {
         Write-Host "`r`nInstalling Android SDK (sdk-tools).";
-        Unzip-File $AndroidSdkFile $AndroidSdkDir | Out-Null;
+        UnzipFile $AndroidSdkFile $AndroidSdkDir | Out-Null;
         $NewPath = Join-Path $AndroidSdkDir 'tools';
-        if (Exists-Paths $NewPath)
+        if (ExistsPaths $NewPath)
         {
             Write-Host "Updating Environment Variables PATH and ANDROID_HOME.";
             Install-EnvironmentVariablePath $NewPath 'Machine';
@@ -1248,12 +1250,12 @@ if((Get-ChildItem $AndroidSdkDir -Force -ErrorAction SilentlyContinue | Select-O
     {
         $UrlFile = 'https://dl.google.com/android/repository/platform-tools-latest-windows.zip';
     }
-    $AndroidSdkFile = Download-File 'platform-tools-latest-windows.zip' $UrlFile;
+    $AndroidSdkFile = DownloadFile 'platform-tools-latest-windows.zip' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($AndroidSdkFile)))
     {
-        Unzip-File $AndroidSdkFile $AndroidSdkDir | Out-Null;
+        UnzipFile $AndroidSdkFile $AndroidSdkDir | Out-Null;
         $NewPath = Join-Path $AndroidSdkDir 'platform-tools';
-        if (Exists-Paths $NewPath)
+        if (ExistsPaths $NewPath)
         {
             Write-Host "Updating Environment Variable PATH.";
             Install-EnvironmentVariablePath $NewPath 'Machine';
@@ -1266,10 +1268,10 @@ if((Get-ChildItem $AndroidSdkDir -Force -ErrorAction SilentlyContinue | Select-O
     }
     Write-Host "`r`nPreparing User Android Directory.";
     $NewPath = Join-Path $Env:UserProfile '.android';
-    Prepare-Directory $NewPath;
+    PrepareDirectory $NewPath;
     $NewPath = Join-Path $NewPath 'repositories.cfg';
     New-Item -Path $NewPath -ItemType File -Force | Out-Null;
-    if (Exists-Paths(Join-Path $AndroidSdkDir 'tools\bin\sdkmanager.bat'))
+    if (ExistsPaths(Join-Path $AndroidSdkDir 'tools\bin\sdkmanager.bat'))
     {
         $InstallOptions = ' --licenses';
         Write-Host "`r`nAccepting Android licenses.";
@@ -1286,7 +1288,7 @@ if((Get-ChildItem $AndroidSdkDir -Force -ErrorAction SilentlyContinue | Select-O
         foreach($Package in $TextFile)
         {
             $PathPackage = $Package.Replace(';','\');
-            if (!(Exists-Paths(Join-Path $AndroidSdkDir $PathPackage)))
+            if (!(ExistsPaths(Join-Path $AndroidSdkDir $PathPackage)))
             {
                 $InstallOptions = '--install ' + $Package;
                 Start-ProcessInSilentMode $Command $InstallOptions $false | Out-Null;
@@ -1322,14 +1324,14 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://dl.google.com/dl/android/studio/ide-zips/3.0.1.0/android-studio-ide-171.4443003-windows.zip';
     }
-    $AndroidFile = Download-File 'android-studio-ide-171.4443003-windows.zip' $UrlFile;
+    $AndroidFile = DownloadFile 'android-studio-ide-171.4443003-windows.zip' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($AndroidFile)))
     {
         Write-Host "`r`nInstalling Android Studio.";
-        Unzip-File $AndroidFile $AndroidStudioDir | Out-Null;
+        UnzipFile $AndroidFile $AndroidStudioDir | Out-Null;
         $OldPath = Join-Path $AndroidStudioDir 'android-studio';
         $AndroidStudioDir = Join-Path $AndroidStudioDir 'Studio';
-        if (!(Exists-Paths $AndroidStudioDir))
+        if (!(ExistsPaths $AndroidStudioDir))
         {
             Write-Host "`r`nConfigurating Android Studio.";
             Rename-Item -NewName $AndroidStudioDir -Path $OldPath -Force | Out-Null;
@@ -1381,7 +1383,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://nodejs.org/dist/v7.0.0/node-v7.0.0-x64.msi';
     }
-    $NodeJsFile = Download-File 'node-v7.0.0-x64.msi' $UrlFile;
+    $NodeJsFile = DownloadFile 'node-v7.0.0-x64.msi' $UrlFile;
     $InstallOptions = '/i "' + $NodeJsFile + '" INSTALLDIR="' + $NodeJsDir + '" /quiet /qn /norestart /l*v "' + (Join-Path $Global:PathAppsTemp '\Install-NodeJs.log') + '"';
     if (-not ([string]::IsNullOrEmpty($NodeJsFile)))
     {
@@ -1421,7 +1423,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://github.com/git-for-windows/git/releases/download/v2.16.1.windows.4/Git-2.16.1.4-64-bit.exe';
     }
-    $GitFile = Download-File 'Git-2.16.1.4-64-bit.exe' $UrlFile;
+    $GitFile = DownloadFile 'Git-2.16.1.4-64-bit.exe' $UrlFile;
     $InstallOptions = '/verysilent /suppressmsgboxes /norestart /nocancel /sp- /closeapplications /restartapplications /components="icons,assoc,assoc_sh,ext,ext\shellhere,ext\guihere,icons\quicklaunch" /DIR="' + $GitDir + '" /LOG="' + (Join-Path $Global:PathAppsTemp '\Install-Git.log') + '"';
     if (-not ([string]::IsNullOrEmpty($GitFile)))
     {
@@ -1460,7 +1462,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://downloads.atlassian.com/software/sourcetree/windows/ga/SourceTreeSetup-2.4.7.0.exe';
     }
-    $SourceTreeFile = Download-File 'SourceTreeSetup-2.4.7.0.exe' $UrlFile;
+    $SourceTreeFile = DownloadFile 'SourceTreeSetup-2.4.7.0.exe' $UrlFile;
     $InstallOptions = '/passive';
     if (-not ([string]::IsNullOrEmpty($SourceTreeFile)))
     {
@@ -1497,7 +1499,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe';
     }
-    $VCFile = Download-File 'vcredist_x64.exe' $UrlFile;
+    $VCFile = DownloadFile 'vcredist_x64.exe' $UrlFile;
     $InstallOptions = '/install /quiet /norestart /l*v "' + (Join-Path $Global:PathAppsTemp '\Install-VCRedist.log') + '"';
     if (-not ([string]::IsNullOrEmpty($VCFile)))
     {
@@ -1527,7 +1529,7 @@ $Key = Get-UninstallRegistryKey 'Python 3.5.4 (64-bit)*' -WarningAction Silently
 if ($Key -eq $null)
 {
     $PythonDir = Join-Path $PathInstall 'Python3';
-    Prepare-Directory $PythonDir;
+    PrepareDirectory $PythonDir;
     if ($UseSharedFolder)
     {
         $UrlFile = $RepositoryLocal + '\python-3.5.4-amd64.exe';
@@ -1536,14 +1538,14 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://www.python.org/ftp/python/3.5.4/python-3.5.4-amd64.exe';
     }
-    $PythonFile = Download-File 'python-3.5.4-amd64.exe' $UrlFile;
+    $PythonFile = DownloadFile 'python-3.5.4-amd64.exe' $UrlFile;
     $InstallOptions = '/quiet InstallAllUsers=0 PrependPath=1 TargetDir="' + $PythonDir + '"';
     if (-not ([string]::IsNullOrEmpty($PythonFile)))
     {
         Write-Host "`r`nInstalling Python3.";
         Start-ProcessInSilentMode $PythonFile $InstallOptions | Out-Null;
         Update-SessionEnvironment;
-        if (Exists-Paths $PythonDir)
+        if (ExistsPaths $PythonDir)
         {
             Write-Host "Updating Environment Variable PATH.";
             Install-EnvironmentVariablePath $PythonDir 'Machine';
@@ -1558,7 +1560,7 @@ if ($Key -eq $null)
             {
                 $UrlFile = 'https://bootstrap.pypa.io/get-pip.py';
             }
-            $PipFile = Download-File 'get-pip.py' $UrlFile;
+            $PipFile = DownloadFile 'get-pip.py' $UrlFile;
             if (-not ([string]::IsNullOrEmpty($PipFile)))
             {
                 Write-Host "`r`n > python $PipFile";
@@ -1605,7 +1607,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://az764295.vo.msecnd.net/stable/c63189deaa8e620f650cc28792b8f5f3363f2c5b/VSCodeSetup-x64-1.20.0.exe';
     }
-    $VSCodeFile = Download-File 'VSCodeSetup-x64-1.20.0.exe' $UrlFile;
+    $VSCodeFile = DownloadFile 'VSCodeSetup-x64-1.20.0.exe' $UrlFile;
     $InstallOptions = '/verysilent /suppressmsgboxes /closeapplications /restartapplications /mergetasks="!runCode, desktopicon, quicklaunchicon, addcontextmenufiles, !addcontextmenufolders, addtopath" /DIR="' + $VSCodeDir + '" /LOG="' + (Join-Path $Global:PathAppsTemp '\Install-VSCode.log') + '"';
     if (-not ([string]::IsNullOrEmpty($VSCodeFile)))
     {
@@ -1618,7 +1620,8 @@ if ($Key -eq $null)
             Write-Host "`r`nERROR: code.cmd no found in $VSCodeDir\bin." -ForegroundColor Yellow -BackgroundColor Red;
         }
         Write-Host "Adding Visual Studio Code Extensions.";
-        $TextFile = "ms-python.python", "ms-vscode.csharp", "PeterJausovec.vscode-docker", "formulahendry.docker-explorer", "ms-azuretools.vscode-cosmosdb";
+        $TextFile = "ms-python.python", "ms-vscode.csharp", "PeterJausovec.vscode-docker", "formulahendry.docker-explorer", "ms-azuretools.vscode-cosmosdb",
+                    "ms-vscode.powershell", "ms-vscode.cpptools";
         foreach($Extension in $TextFile)
         {
             $InstallOptions = '--install-extension ' + $Extension;
@@ -1656,7 +1659,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://download.jetbrains.com/python/pycharm-community-2017.3.3.exe';
     }
-    $PyCharmFile = Download-File 'pycharm-community-2017.3.3.exe' $UrlFile;
+    $PyCharmFile = DownloadFile 'pycharm-community-2017.3.3.exe' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($PyCharmFile)))
     {
         $TextFile = "mode=admin", "launcher32=0", "launcher64=1", "jre32=0", ".py=1" -Join "`n" | Out-File -Encoding ASCII ($Global:PathAppsTemp + "\silent.config");
@@ -1695,7 +1698,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://github.com/appium/appium-desktop/releases/download/v1.3.2/Appium.Setup.1.3.2.exe';
     }
-    $AppiumFile = Download-File 'Appium.Setup.1.3.2.exe' $UrlFile;
+    $AppiumFile = DownloadFile 'Appium.Setup.1.3.2.exe' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($AppiumFile)))
     {
         $InstallOptions = '/NCRC /S /D=' + $AppiumDir;
@@ -1747,20 +1750,20 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-3.6.2-signed.msi';
     }
-    $MongoFile = Download-File 'mongodb-win32-x86_64-2008plus-ssl-3.6.2-signed.msi' $UrlFile;
+    $MongoFile = DownloadFile 'mongodb-win32-x86_64-2008plus-ssl-3.6.2-signed.msi' $UrlFile;
     if (-not ([string]::IsNullOrEmpty($MongoFile)))
     {
         $InstallOptions = '/q /i "' + $MongoFile + '" INSTALLLOCATION="' + $MongoDir + '" ADDLOCAL="All" /l*v "' + (Join-Path $Global:PathAppsTemp '\Install-MongoDb.log') + '"';
         Write-Host "`r`nInstalling MongoDb.";
         Start-ProcessInSilentMode $Global:Msi $InstallOptions | Out-Null;
         $MongoExe = Join-Path $MongoDir 'bin\mongod.exe';
-        if (Exists-Paths $MongoExe)
+        if (ExistsPaths $MongoExe)
         {
             Write-Host "Configurating MongoDb.";
             $DatabaseDir = Join-Path $MongoDir 'databases';
-            Prepare-Directory $DatabaseDir;
+            PrepareDirectory $DatabaseDir;
             $LogDir = Join-Path $MongoDir 'logs';
-            Prepare-Directory $LogDir;
+            PrepareDirectory $LogDir;
             $NewPath = Join-Path $MongoDir 'bin';
             Install-EnvironmentVariablePath $NewPath 'Machine';            
             $TextFile = "systemLog:", "    destination: file", "    path: $LogDir\mongod.log", "storage:", "    dbPath: $DatabaseDir" -Join "`n" | Out-File -Encoding ASCII ($MongoDir + "\bin\mongod.cfg");
@@ -1801,7 +1804,7 @@ if ($Key -eq $null)
     {
         $UrlFile = 'https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe';
     }
-    $DockerFile = Download-File 'Docker for Windows Installer.exe' $UrlFile;
+    $DockerFile = DownloadFile 'Docker for Windows Installer.exe' $UrlFile;
     $InstallOptions = 'install --quiet';
     if (-not ([string]::IsNullOrEmpty($DockerFile)))
     {
@@ -1809,10 +1812,10 @@ if ($Key -eq $null)
         Start-ProcessInSilentMode $DockerFile $InstallOptions | Out-Null;
         Update-SessionEnvironment;
         $OldPath = Join-Path $Env:ProgramFiles 'Docker\Docker'
-        if (Exists-Paths $OldPath)
+        if (ExistsPaths $OldPath)
         {
             $ServiceName = 'com.docker.service';
-            if (Exists-Service $ServiceName)
+            if (ExistsService $ServiceName)
             {
                 Write-Host "Stoping the Windows Service '$ServiceName'.";
                 Stop-Service -Name $ServiceName -Force;
@@ -1895,14 +1898,14 @@ else
 {
     $UrlFile = 'https://download.sysinternals.com/files/SysinternalsSuite.zip';
 }
-$SysinternalsFile = Download-File 'SysinternalsSuite.zip' $UrlFile;
+$SysinternalsFile = DownloadFile 'SysinternalsSuite.zip' $UrlFile;
 if (-not ([string]::IsNullOrEmpty($SysinternalsFile)))
 {
     $SysinternalsDir = Join-Path $PathInstall 'Sysinternals';
-    Prepare-Directory $SysinternalsDir;
+    PrepareDirectory $SysinternalsDir;
     Write-Host "`r`nInstalling Sysinternals Suite.";
-    Unzip-File $SysinternalsFile $SysinternalsDir | Out-Null;
-    if (Exists-Paths $SysinternalsDir)
+    UnzipFile $SysinternalsFile $SysinternalsDir | Out-Null;
+    if (ExistsPaths $SysinternalsDir)
     {
         Write-Host "`r`nConfigurating Sysinternals Suite.";
         $Tools = "AccessChk", "Active Directory Explorer", "ADInsight", "Autologon", "AutoRuns", "BGInfo", "CacheSet", "ClockRes",
@@ -1912,16 +1915,16 @@ if (-not ([string]::IsNullOrEmpty($SysinternalsFile)))
                  "PsKill", "PsList", "PsLoggedon", "PsLoglist", "PsPasswd", "PsService", "PsShutdown", "PsSuspend", "RamMap", "RegDelNull",
                  "Regjump", "Regsize", "RootkitRevealer", "Share Enum", "ShellRunas", "SigCheck", "Streams", "Strings", "Sync",
                  "System Monitor", "TCPView", "VMMap", "VolumeID", "Whois", "Winobj", "ZoomIt";
-        New-Item -Path $Key | Out-Null;
+        New-Item -Path $Key -ErrorAction SilentlyContinue | Out-Null;
         Foreach ($Tool in $Tools)
         {
             $NewKey = Join-Path $Key $Tool;
-            New-Item -Path $NewKey | Out-Null;
-            New-ItemProperty -Path $NewKey -Name EulaAccepted -Value 1 -Force | Out-Null;
+            New-Item -Path $NewKey -ErrorAction SilentlyContinue | Out-Null;
+            New-ItemProperty -Path $NewKey -Name EulaAccepted -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null;
         } 
         $NewKey = Join-Path $Key "\SigCheck\VirusTotal";
-        New-Item -Path $NewKey | Out-Null;
-        New-ItemProperty -Path $NewKey -Name VirusTotalTermsAccepted -Value 1 -Force | Out-Null;
+        New-Item -Path $NewKey -ErrorAction SilentlyContinue | Out-Null;
+        New-ItemProperty -Path $NewKey -Name VirusTotalTermsAccepted -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null;
         Install-EnvironmentVariablePath $SysinternalsDir 'Machine';
     }
 }
@@ -1932,6 +1935,117 @@ else
 
 
 
+#####################################
+# Processing installation of Vysor. #
+#####################################
+Write-Host "`r`n`r`n";
+Write-Host "#####################################";
+Write-Host "# Processing installation of Vysor. #";
+Write-Host "#####################################";
+$Key = Get-UninstallRegistryKey 'Vysor*' -WarningAction SilentlyContinue;
+if ($Key -eq $null)
+{
+    if ($UseSharedFolder)
+    {
+        $UrlFile = $RepositoryLocal + '\Vysor-win32-ia32.exe';
+    }
+    else
+    {
+        $UrlFile = 'https://vysornuts.clockworkmod.com/download/win32';
+    }
+    $VysorFile = DownloadFile 'Vysor-win32-ia32.exe' $UrlFile;
+    $InstallOptions = '/passive';
+    if (-not ([string]::IsNullOrEmpty($VysorFile)))
+    {
+        Write-Host "`r`nInstalling Vysor.";
+        Start-ProcessInSilentMode $VysorFile $InstallOptions | Out-Null;
+    }
+    else
+    {
+        Write-Host "`r`nERROR: An error occurred when installing Vysor." -ForegroundColor Yellow -BackgroundColor Red;
+    }
+}
+else
+{
+    Write-Host "`r`nVysor is already installed.";
+}
+
+
+
+####################################################
+# Processing installation of Universal Adb Driver. #
+####################################################
+Write-Host "`r`n`r`n";
+Write-Host "####################################################";
+Write-Host "# Processing installation of Universal Adb Driver. #";
+Write-Host "####################################################";
+$Key = Get-UninstallRegistryKey 'Universal Adb Driver*' -WarningAction SilentlyContinue;
+if ($Key -eq $null)
+{
+    if ($UseSharedFolder)
+    {
+        $UrlFile = $RepositoryLocal + '\UniversalAdbDriverSetup.msi';
+    }
+    else
+    {
+        $UrlFile = 'http://download.clockworkmod.com/test/UniversalAdbDriverSetup.msi';
+    }
+    $AdbDriverFile = DownloadFile 'UniversalAdbDriverSetup.msi' $UrlFile;
+    if (-not ([string]::IsNullOrEmpty($AdbDriverFile)))
+    {
+        Write-Host "`r`nInstalling Universal AdbDriver.";
+        $InstallOptions = '/i "' + $AdbDriverFile + '" /quiet /qn /norestart /l*v "' + (Join-Path $Global:PathAppsTemp '\Install-UniversalAdbDriver.log') + '"';
+        Start-ProcessInSilentMode $Global:Msi $InstallOptions | Out-Null;
+    }
+    else
+    {
+        Write-Host "`r`nERROR: An error occurred when installing Universal AdbDriver." -ForegroundColor Yellow -BackgroundColor Red;
+    }
+}
+else
+{
+    Write-Host "`r`nUniversal AdbDriver is already installed.";
+}
+
+
+
+######################################
+# Processing installation of ConEmu. #
+######################################
+Write-Host "`r`n`r`n";
+Write-Host "######################################";
+Write-Host "# Processing installation of ConEmu. #";
+Write-Host "######################################";
+$Key = Get-UninstallRegistryKey 'ConEmu*' -WarningAction SilentlyContinue;
+if ($Key -eq $null)
+{
+    if ($UseSharedFolder)
+    {
+        $UrlFile = $RepositoryLocal + '\ConEmuSetup.180309.exe';
+    }
+    else
+    {
+        $UrlFile = 'https://github.com/Maximus5/ConEmu/releases/download/v18.03.09/ConEmuSetup.180309.exe';
+    }
+    $ConEmuFile = DownloadFile 'ConEmuSetup.180309.exe' $UrlFile;
+    $ConEmuDir = Join-Path $PathInstall 'ConEmu'
+    if (-not ([string]::IsNullOrEmpty($ConEmuFile)))
+    {
+        Write-Host "`r`nInstalling ConEmu.";
+        $InstallOptions = '/p:x64,adm /quiet /qn /norestart APPLICATIONFOLDER="' + $ConEmuDir + '" /l*v "' + (Join-Path $Global:PathAppsTemp '\Install-ConEmu.log') + '"';
+        Start-ProcessInSilentMode $ConEmuFile $InstallOptions | Out-Null;
+    }
+    else
+    {
+        Write-Host "`r`nERROR: An error occurred when installing ConEmu." -ForegroundColor Yellow -BackgroundColor Red;
+    }
+}
+else
+{
+    Write-Host "`r`nConEmu is already installed.";
+}
+
+
 
 ################################################
 # Cloning Repository 'tea-data-management-ui'. #
@@ -1940,9 +2054,9 @@ Write-Host "`r`n`r`n";
 Write-Host "################################################";
 Write-Host "# Cloning Repository 'tea-data-management-ui'. #";
 Write-Host "################################################";
-Prepare-Directory $PathRepository;
+PrepareDirectory $PathRepository;
 $RepositoryName = 'tea-data-management-ui';
-if (Exists-Paths $PathRepository)
+if (ExistsPaths $PathRepository)
 {
     Push-Location -Path $PathRepository;
     $RepoDir = Join-Path $PathRepository $RepositoryName;
@@ -1953,7 +2067,7 @@ if (Exists-Paths $PathRepository)
         Write-Host "`r`n >" $Command $InstallOptions
         Invoke-Expression "$Command $InstallOptions";
     }
-    if (Exists-Paths $RepoDir)
+    if (ExistsPaths $RepoDir)
     {
         Push-Location -Path $RepoDir;
         $Command = 'pip install virtualenv';
@@ -1978,9 +2092,9 @@ Write-Host "`r`n`r`n";
 Write-Host "#####################################";
 Write-Host "# Cloning Repository 'tea-pos-app'. #";
 Write-Host "#####################################";
-Prepare-Directory $PathRepository;
+PrepareDirectory $PathRepository;
 $RepositoryName = 'tea-pos-app';
-if (Exists-Paths $PathRepository)
+if (ExistsPaths $PathRepository)
 {
     Push-Location -Path $PathRepository;
     $RepoDir = Join-Path $PathRepository $RepositoryName;
@@ -1991,7 +2105,7 @@ if (Exists-Paths $PathRepository)
         Write-Host "`r`n >" $Command $InstallOptions
         Invoke-Expression "$Command $InstallOptions";
     }
-    if (Exists-Paths $RepoDir)
+    if (ExistsPaths $RepoDir)
     {
         Push-Location -Path $RepoDir;
         $Command = 'pip install virtualenv';
