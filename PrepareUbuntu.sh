@@ -54,6 +54,7 @@ code --install-extension jgw9617.ionic2-vscode
 code --install-extension pkosta2006.rxjs-snippets
 code --install-extension robertohuertasm.vscode-icons
 code --install-extension eg2.tslint
+code --install-extension eg2.vscode-npm-script
 code --install-extension donjayamanne.githistory
 
 
