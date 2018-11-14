@@ -1,7 +1,7 @@
 ##########################
 # Install Pre-Requisites #
 ##########################
-sudo apt-get install curl apt-transport-https gvfs-bin
+sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools
 
 
 ###############
@@ -69,6 +69,64 @@ curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 sudo apt-get update
 sudo apt-get install pgadmin4
+
+
+########################
+# Configure FTP Server #
+########################
+# -Source: https://www.hostinger.co/tutoriales/como-configurar-servidor-ftp-en-ubuntu-vps/
+sudo apt-get install vsftpd
+
+# Add Allowed ports into Ubuntu Firewall
+sudo ufw allow from any to any port 20,21,22,990,10000:10010 proto tcp
+sudo iptables -I INPUT -p tcp --destination-port 20:22 -j ACCEPT
+sudo iptables -I INPUT -p tcp --destination-port 990 -j ACCEPT
+sudo iptables -I INPUT -p tcp --destination-port 10000:10010 -j ACCEPT
+sudo service iptables save
+
+# Edit FTP Service configuration
+sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.backup
+sudo sed -i 's/#anonymous_enable/anonymous_enable/g' /etc/vsftpd.conf
+sudo sed -i 's/anonymous_enable=YES/anonymous_enable=NO/g' /etc/vsftpd.conf
+sudo sed -i 's/#local_enable/local_enable/g' /etc/vsftpd.conf
+sudo sed -i 's/local_enable=NO/local_enable=YES/g' /etc/vsftpd.conf
+sudo sed -i 's/#write_enable/write_enable/g' /etc/vsftpd.conf
+sudo sed -i 's/write_enable=NO/write_enable=YES/g' /etc/vsftpd.conf
+sudo sed -i '0,/#chroot_local_user/ s/#chroot_local_user/chroot_local_user/g' /etc/vsftpd.conf
+sudo sed -i '0,/chroot_local_user=NO/ s/chroot_local_user=NO/chroot_local_user=YES/g' /etc/vsftpd.conf
+sudo sed -i 's/#rsa_cert_file/rsa_cert_file/g' /etc/vsftpd.conf
+sudo sed -i 's/rsa_cert_file=\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/rsa_cert_file=\/etc\/ssl\/private\/vsftpd.cer/g' /etc/vsftpd.conf
+sudo sed -i 's/#rsa_private_key_file/rsa_private_key_file/g' /etc/vsftpd.conf
+sudo sed -i 's/rsa_private_key_file=\/etc\/ssl\/private\/ssl-cert-snakeoil.key/rsa_private_key_file=\/etc\/ssl\/private\/vsftpd.key/g' /etc/vsftpd.conf
+sudo sed -i 's/#ssl_enable/ssl_enable/g' /etc/vsftpd.conf
+sudo sed -i 's/ssl_enable=NO/ssl_enable=YES/g' /etc/vsftpd.conf
+sudo sed -i 's/#ftpd_banner=/ftpd_banner=/g' /etc/vsftpd.conf
+sudo sed -i 's/ftpd_banner=Welcome to blah FTP service./ftpd_banner=Welcome to HACKPRO FTP service./g' /etc/vsftpd.conf
+sudo sed -i '$ a \\n#\n# Add Security options to configuration' /etc/vsftpd.conf
+sudo sed -i '$ a user_sub_token=\$USER' /etc/vsftpd.conf
+sudo sed -i '$ a local_root=/home/\$USER' /etc/vsftpd.conf
+sudo sed -i '$ a pasv_enable=YES' /etc/vsftpd.conf
+sudo sed -i '$ a pasv_min_port=10000' /etc/vsftpd.conf
+sudo sed -i '$ a pasv_max_port=10010' /etc/vsftpd.conf
+sudo sed -i '$ a userlist_enable=YES' /etc/vsftpd.conf
+sudo sed -i '$ a userlist_file=/etc/vsftpd.userlist' /etc/vsftpd.conf
+sudo sed -i '$ a userlist_deny=NO' /etc/vsftpd.conf
+sudo sed -i '$ a allow_writeable_chroot=YES' /etc/vsftpd.conf
+sudo sed -i '$ a allow_anon_ssl=NO' /etc/vsftpd.conf
+sudo sed -i '$ a force_local_data_ssl=YES' /etc/vsftpd.conf
+sudo sed -i '$ a force_local_logins_ssl=YES' /etc/vsftpd.conf
+sudo sed -i '$ a ssl_tlsv1=YES' /etc/vsftpd.conf
+sudo sed -i '$ a ssl_sslv2=NO' /etc/vsftpd.conf
+sudo sed -i '$ a ssl_sslv3=NO' /etc/vsftpd.conf
+sudo sed -i '$ a require_ssl_reuse=NO' /etc/vsftpd.conf
+sudo sed -i '$ a ssl_ciphers=HIGH' /etc/vsftpd.conf
+
+# Add users to FTP Service configuration
+echo "$USER" | sudo tee -a /etc/vsftpd.userlist
+
+sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/vsftpd.key -out /etc/ssl/private/vsftpd.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
+
+sudo systemctl restart vsftpd
 
 
 ###############################
