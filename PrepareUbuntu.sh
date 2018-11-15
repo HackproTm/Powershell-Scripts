@@ -4,6 +4,16 @@
 sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools
 
 
+#######################################
+# Install GRUB Customizer and GParted #
+#######################################
+# -Source: https://launchpad.net/~danielrichter2007/+archive/ubuntu/grub-customizer
+sudo add-apt-repository ppa:danielrichter2007/grub-customizer
+sudo apt-get update
+sudo apt-get install grub-customizer
+sudo apt-get install gparted
+
+
 ###############
 # Install Git #
 ###############
