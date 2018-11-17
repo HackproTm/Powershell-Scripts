@@ -28,7 +28,9 @@ sudo apt-get install git-cola
 # Install Node Version Manager #
 ################################
 # -Source: https://github.com/creationix/nvm#install-script
-curl -o /tmp/install.sh https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash /tmp/install.sh
+curl -o /tmp/install.sh https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh
+bash /tmp/install.sh
+source ~/.bashrc
 
 
 ##################
