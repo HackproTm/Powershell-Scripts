@@ -84,19 +84,17 @@ sudo apt-get update
 sudo apt-get install pgadmin4
 
 
-########################
-# Configure FTP Server #
-########################
+####################################
+# Install and Configure FTP Server #
+####################################
 # -Source: https://www.hostinger.co/tutoriales/como-configurar-servidor-ftp-en-ubuntu-vps/
 sudo apt-get install vsftpd
-
 # Add Allowed ports into Ubuntu Firewall
 sudo ufw allow from any to any port 20,21,22,990,10000:10010 proto tcp
 sudo iptables -I INPUT -p tcp --destination-port 20:22 -j ACCEPT
 sudo iptables -I INPUT -p tcp --destination-port 990 -j ACCEPT
 sudo iptables -I INPUT -p tcp --destination-port 10000:10010 -j ACCEPT
 sudo service iptables save
-
 # Edit FTP Service configuration
 sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.backup
 sudo sed -i 's/#anonymous_enable/anonymous_enable/g' /etc/vsftpd.conf
@@ -133,12 +131,11 @@ sudo sed -i '$ a ssl_sslv2=NO' /etc/vsftpd.conf
 sudo sed -i '$ a ssl_sslv3=NO' /etc/vsftpd.conf
 sudo sed -i '$ a require_ssl_reuse=NO' /etc/vsftpd.conf
 sudo sed -i '$ a ssl_ciphers=HIGH' /etc/vsftpd.conf
-
 # Add users to FTP Service configuration
 echo "$USER" | sudo tee -a /etc/vsftpd.userlist
-
+# Create SSL Certicate for FTP Secure
 sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/vsftpd.key -out /etc/ssl/private/vsftpd.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
-
+# Restart Service for update changes
 sudo systemctl restart vsftpd
 
 
