@@ -145,6 +145,12 @@ sudo systemctl restart vsftpd
 sudo snap install vlc
 
 
+################
+# Install 7Zip #
+################
+sudo apt-get install p7zip-full p7zip-rar
+
+
 ###############################
 # Prepare GitHub Repositories #
 ###############################
