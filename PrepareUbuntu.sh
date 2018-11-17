@@ -139,6 +139,12 @@ sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/priva
 sudo systemctl restart vsftpd
 
 
+###############
+# Install VLC #
+###############
+sudo snap install vlc
+
+
 ###############################
 # Prepare GitHub Repositories #
 ###############################
