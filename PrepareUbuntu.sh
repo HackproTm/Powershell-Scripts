@@ -1,3 +1,10 @@
+#!/bin/bash
+# Install Commons Apps for Ubuntu
+#
+# Autor: Edwin Mantilla Santamaría
+# Usage: ./PrepareUbuntu.sh
+
+
 ##########################
 # Install Pre-Requisites #
 ##########################
