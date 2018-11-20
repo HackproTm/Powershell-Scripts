@@ -1,7 +1,7 @@
 ##########################
 # Install Pre-Requisites #
 ##########################
-sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools
+sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core
 
 
 #######################################
@@ -149,6 +149,13 @@ sudo snap install vlc
 # Install 7Zip #
 ################
 sudo apt-get install p7zip-full p7zip-rar
+
+
+#################
+# Install Slack #
+#################
+curl -o /tmp/slack-desktop-3.3.3-amd64.deb https://downloads.slack-edge.com/linux_releases/slack-desktop-3.3.3-amd64.deb
+sudo gdebi /tmp/slack-desktop-3.3.3-amd64.deb
 
 
 ###############################
