@@ -8,7 +8,10 @@
 ##########################
 # Install Pre-Requisites #
 ##########################
+# Install required packages
 sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core
+# Create SSL Certicate for hackpro.co
+sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/hackpro.key -out /etc/ssl/private/hackpro.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
 
 
 #######################################
@@ -140,8 +143,6 @@ sudo sed -i '$ a require_ssl_reuse=NO' /etc/vsftpd.conf
 sudo sed -i '$ a ssl_ciphers=HIGH' /etc/vsftpd.conf
 # Add users to FTP Service configuration
 echo "$USER" | sudo tee -a /etc/vsftpd.userlist
-# Create SSL Certicate for FTP Secure
-sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/vsftpd.key -out /etc/ssl/private/vsftpd.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
 # Restart Service for update changes
 sudo systemctl restart vsftpd
 
