@@ -116,9 +116,9 @@ sudo sed -i 's/write_enable=NO/write_enable=YES/g' /etc/vsftpd.conf
 sudo sed -i '0,/#chroot_local_user/ s/#chroot_local_user/chroot_local_user/g' /etc/vsftpd.conf
 sudo sed -i '0,/chroot_local_user=NO/ s/chroot_local_user=NO/chroot_local_user=YES/g' /etc/vsftpd.conf
 sudo sed -i 's/#rsa_cert_file/rsa_cert_file/g' /etc/vsftpd.conf
-sudo sed -i 's/rsa_cert_file=\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/rsa_cert_file=\/etc\/ssl\/private\/vsftpd.cer/g' /etc/vsftpd.conf
+sudo sed -i 's/rsa_cert_file=\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem/rsa_cert_file=\/etc\/ssl\/private\/hackpro.cer/g' /etc/vsftpd.conf
 sudo sed -i 's/#rsa_private_key_file/rsa_private_key_file/g' /etc/vsftpd.conf
-sudo sed -i 's/rsa_private_key_file=\/etc\/ssl\/private\/ssl-cert-snakeoil.key/rsa_private_key_file=\/etc\/ssl\/private\/vsftpd.key/g' /etc/vsftpd.conf
+sudo sed -i 's/rsa_private_key_file=\/etc\/ssl\/private\/ssl-cert-snakeoil.key/rsa_private_key_file=\/etc\/ssl\/private\/hackpro.key/g' /etc/vsftpd.conf
 sudo sed -i 's/#ssl_enable/ssl_enable/g' /etc/vsftpd.conf
 sudo sed -i 's/ssl_enable=NO/ssl_enable=YES/g' /etc/vsftpd.conf
 sudo sed -i 's/#ftpd_banner=/ftpd_banner=/g' /etc/vsftpd.conf
