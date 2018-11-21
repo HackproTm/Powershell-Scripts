@@ -24,6 +24,16 @@ sudo apt-get install grub-customizer
 sudo apt-get install gparted
 
 
+################
+# Install Java #
+################
+# -Source: https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04
+sudo apt-get install default-jdk
+javapath=$(update-alternatives --query java | grep "Value: " | cut -c8-)
+echo "JAVA_HOME=${javapath:0:-4}" | sudo tee -a /etc/environment
+source /etc/environment
+
+
 ###############
 # Install Git #
 ###############
