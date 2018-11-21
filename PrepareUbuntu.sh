@@ -57,9 +57,10 @@ source ~/.bashrc
 # Install NodeJs #
 ##################
 # -Source: https://github.com/creationix/nvm#usage
+# -Prerequisites: Install Node Version Manager
 nvm install 10.13.0
-npm install -g angular-cli/latest
-npm install -g typescript
+nvm default 10.13.0
+nvm use default
 
 
 ##############################
