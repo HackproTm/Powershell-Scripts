@@ -37,6 +37,7 @@ source /etc/environment
 ###############
 # Install Git #
 ###############
+# -Source: https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-18-04
 sudo apt-get install git
 git config --global user.name "Edwin Mantilla"
 git config --global user.email "hackpro.ems@gmail.com"
