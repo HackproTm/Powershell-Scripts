@@ -9,9 +9,10 @@
 # Install Pre-Requisites #
 ##########################
 # Install required packages
-sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core
+sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core jq
 # Create SSL Certicate for hackpro.co
 sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/hackpro.key -out /etc/ssl/private/hackpro.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
+sudo chmod -R g+r /etc/ssl/private/hackpro.key
 
 
 #######################################
@@ -101,11 +102,30 @@ for e in $extensions; do code --install-extension $e; done
 ######################
 # -Source: https://wiki.postgresql.org/wiki/Apt
 sudo apt-get install postgresql postgresql-contrib
+sudo usermod postgres -aG root,ssl-cert
 curl -o /tmp/ACCC4CF8.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
 sudo apt-key add /tmp/ACCC4CF8.asc
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 sudo apt-get update
 sudo apt-get install pgadmin4
+
+# Configure PostgreSQL Server
+configdirs=$(pg_lsclusters -j | jq -r '.[].configdir')
+for c in $configdirs; do
+    sudo cp $c/postgresql.conf $c/postgresql.conf.old
+    sudo sed -i 's/#listen_addresses/listen_addresses/g' $c/postgresql.conf
+    sudo sed -i 's/ssl_cert_file = '\''\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem'\''/ssl_cert_file = '\''\/etc\/ssl\/private\/hackpro.cer'\''/g' $c/postgresql.conf
+    sudo sed -i 's/ssl_key_file = '\''\/etc\/ssl\/private\/ssl-cert-snakeoil.key'\''/ssl_key_file = '\''\/etc\/ssl\/private\/hackpro.key'\''/g' $c/postgresql.conf
+done
+
+# Restart PostgreSQL services
+versions=$(pg_lsclusters -j | jq -r '.[].version')
+for v in $versions; do
+    clusters=$(pg_lsclusters -j $v| jq -r '.[].cluster')
+    for c in $clusters; do
+        sudo pg_ctlcluster $v $c restart
+    done
+done
 
 
 ####################################
