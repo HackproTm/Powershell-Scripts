@@ -24,9 +24,20 @@ sudo apt-get install grub-customizer
 sudo apt-get install gparted
 
 
+################
+# Install Java #
+################
+# -Source: https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04
+sudo apt-get install default-jdk
+javapath=$(update-alternatives --query java | grep "Value: " | cut -c8-)
+echo "JAVA_HOME=${javapath:0:-4}" | sudo tee -a /etc/environment
+source /etc/environment
+
+
 ###############
 # Install Git #
 ###############
+# -Source: https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-18-04
 sudo apt-get install git
 git config --global user.name "Edwin Mantilla"
 git config --global user.email "hackpro.ems@gmail.com"
@@ -47,9 +58,10 @@ source ~/.bashrc
 # Install NodeJs #
 ##################
 # -Source: https://github.com/creationix/nvm#usage
+# -Prerequisites: Install Node Version Manager
 nvm install 10.13.0
-npm install -g angular-cli/latest
-npm install -g typescript
+nvm default 10.13.0
+nvm use default
 
 
 ##############################
@@ -88,7 +100,8 @@ code --install-extension donjayamanne.githistory
 ######################
 # -Source: https://wiki.postgresql.org/wiki/Apt
 sudo apt-get install postgresql postgresql-contrib
-curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+curl -o /tmp/ACCC4CF8.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+sudo apt-key add /tmp/ACCC4CF8.asc
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 sudo apt-get update
 sudo apt-get install pgadmin4
