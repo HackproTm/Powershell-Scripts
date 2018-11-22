@@ -74,26 +74,27 @@ sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode s
 sudo apt-get update
 sudo apt-get install code
 sudo update-alternatives --set editor /usr/bin/code
-code --install-extension uvbrain.angular2
-code --install-extension angular.ng-template
-code --install-extension cyrilletuzi.angular-schematics
-code --install-extension johnpapa.angular2
-code --install-extension formulahendry.auto-close-tag
-code --install-extension steoates.autoimport
-code --install-extension formulahendry.auto-rename-tag
-code --install-extension abusaidm.html-snippets
-code --install-extension thavarajan.ionic2
-code --install-extension danielehrhardt.ionic3-vs-ionview-snippets
-code --install-extension vsmobile.cordova-tools
-code --install-extension loiane.ionic-extension-pack
-code --install-extension ionic-preview.ionic-preview
-code --install-extension jgw9617.ionic2-vscode
-code --install-extension pkosta2006.rxjs-snippets
-code --install-extension robertohuertasm.vscode-icons
-code --install-extension eg2.tslint
-code --install-extension eg2.vscode-npm-script
-code --install-extension donjayamanne.githistory
+extensions="uvbrain.angular2
+    angular.ng-template
+    cyrilletuzi.angular-schematics
+    johnpapa.angular2
+    formulahendry.auto-close-tag
+    steoates.autoimport
+    formulahendry.auto-rename-tag
+    abusaidm.html-snippets
+    thavarajan.ionic2
+    danielehrhardt.ionic3-vs-ionview-snippets
+    vsmobile.cordova-tools
+    loiane.ionic-extension-pack
+    ionic-preview.ionic-preview
+    jgw9617.ionic2-vscode
+    pkosta2006.rxjs-snippets
+    robertohuertasm.vscode-icons
+    eg2.tslint
+    eg2.vscode-npm-script
+    donjayamanne.githistory"
 
+for e in $extensions; do code --install-extension $e; done
 
 ######################
 # Install PostgreSQL #
