@@ -93,9 +93,12 @@ extensions="uvbrain.angular2
     robertohuertasm.vscode-icons
     eg2.tslint
     eg2.vscode-npm-script
-    donjayamanne.githistory"
+    donjayamanne.githistory
+	bierner.markdown-preview-github-styles
+	editorconfig.editorconfig"
 
 for e in $extensions; do code --install-extension $e; done
+
 
 ######################
 # Install PostgreSQL #
