@@ -52,7 +52,7 @@ sudo apt-get install git-cola
 # -Source: https://github.com/creationix/nvm#install-script
 curl -o /tmp/install.sh https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh
 bash /tmp/install.sh
-source ~/.bashrc
+source ~/.profile
 
 
 ##################
@@ -61,7 +61,7 @@ source ~/.bashrc
 # -Source: https://github.com/creationix/nvm#usage
 # -Prerequisites: Install Node Version Manager
 nvm install 10.13.0
-nvm default 10.13.0
+nvm alias default 10.13.0
 nvm use default
 
 
