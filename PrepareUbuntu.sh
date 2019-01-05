@@ -45,6 +45,17 @@ git config --global user.email "hackpro.ems@gmail.com"
 
 sudo apt-get install git-cola
 
+##############################
+# Install Apache HTTP Server #
+##############################
+# -Source: https://www.digitalocean.com/community/tutorials/como-instalar-el-servidor-web-apache-en-ubuntu-18-04-es
+sudo apt install apache2
+sudo ufw allow 'Apache Full'
+sudo mkdir -p /var/www/hackpro.co/html
+sudo chown -R $USER:$USER /var/www/hackpro.co/html
+sudo chmod -R 755 /var/www/hackpro.co
+
+
 
 ################################
 # Install Node Version Manager #
