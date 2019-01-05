@@ -63,7 +63,7 @@ sudo chmod -R 755 /var/www/hackpro.co
 # -Source: https://github.com/creationix/nvm#install-script
 curl -o /tmp/install.sh https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh
 bash /tmp/install.sh
-source ~/.bashrc
+source ~/.profile
 
 
 ##################
@@ -72,7 +72,7 @@ source ~/.bashrc
 # -Source: https://github.com/creationix/nvm#usage
 # -Prerequisites: Install Node Version Manager
 nvm install 10.13.0
-nvm default 10.13.0
+nvm alias default 10.13.0
 nvm use default
 
 
@@ -104,9 +104,12 @@ extensions="uvbrain.angular2
     robertohuertasm.vscode-icons
     eg2.tslint
     eg2.vscode-npm-script
-    donjayamanne.githistory"
+    donjayamanne.githistory
+	bierner.markdown-preview-github-styles
+	editorconfig.editorconfig"
 
 for e in $extensions; do code --install-extension $e; done
+
 
 ######################
 # Install PostgreSQL #
