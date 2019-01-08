@@ -1,6 +1,6 @@
 ECHO @Off
 
-SET ScriptPath=F:\GitHub\HackproTm\Powershell-Scripts
+SET ScriptPath=%~dp0
 CD /D %ScriptPath%
 
-powershell.exe -NoExit -ExecutionPolicy ByPass -NonInteractive -Command "& {.\SetIPRoute.ps1}"
+powershell.exe -ExecutionPolicy ByPass -NonInteractive -Command "& {.\SetIPRoute.ps1}"
