@@ -223,17 +223,3 @@ sudo apt-get install p7zip-full p7zip-rar
 #################
 curl -o /tmp/slack-desktop-3.3.3-amd64.deb https://downloads.slack-edge.com/linux_releases/slack-desktop-3.3.3-amd64.deb
 sudo gdebi /tmp/slack-desktop-3.3.3-amd64.deb
-
-
-###############################
-# Prepare GitHub Repositories #
-###############################
-cd $HOME
-mkdir -p GitHub/HackproTm
-cd GitHub/HackproTm
-git clone https://github.com/HackproTm/IonicExercises
-git clone https://github.com/kaikcreator/AngularComponents101
-rm -rf AngularComponents101/.git
-mv AngularComponents101/ IonicExercises/
-cd IonicExercises/AngularComponents101/
-npm install
