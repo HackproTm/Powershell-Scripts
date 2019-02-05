@@ -76,6 +76,17 @@ nvm alias default 10.13.0
 nvm use default
 
 
+################
+# Install Yarn #
+################
+# -Source: https://yarnpkg.com/en/docs/install#debian-stable
+# -Prerequisites: Install NodeJs
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt-get update
+sudo apt-get install --no-install-recommends yarn
+
+
 ##############################
 # Install Visual Studio Code #
 ##############################
