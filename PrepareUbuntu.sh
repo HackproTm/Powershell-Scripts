@@ -45,6 +45,7 @@ git config --global user.email "hackpro.ems@gmail.com"
 
 sudo apt-get install git-cola
 
+
 ##############################
 # Install Apache HTTP Server #
 ##############################
@@ -54,7 +55,6 @@ sudo ufw allow 'Apache Full'
 sudo mkdir -p /var/www/hackpro.co/html
 sudo chown -R $USER:$USER /var/www/hackpro.co/html
 sudo chmod -R 755 /var/www/hackpro.co
-
 
 
 ################################
