@@ -9,7 +9,7 @@
 # Install Pre-Requisites #
 ##########################
 # Install required packages
-sudo apt-get install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core jq
+sudo apt install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core jq libjson-perl
 # Create SSL Certicate for hackpro.co
 sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/hackpro.key -out /etc/ssl/private/hackpro.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
 sudo chmod -R g+r /etc/ssl/private/hackpro.key
@@ -20,16 +20,16 @@ sudo chmod -R g+r /etc/ssl/private/hackpro.key
 #######################################
 # -Source: https://launchpad.net/~danielrichter2007/+archive/ubuntu/grub-customizer
 sudo add-apt-repository ppa:danielrichter2007/grub-customizer
-sudo apt-get update
-sudo apt-get install grub-customizer
-sudo apt-get install gparted
+sudo apt update
+sudo apt install grub-customizer
+sudo apt install gparted
 
 
 ################
 # Install Java #
 ################
 # -Source: https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04
-sudo apt-get install default-jdk
+sudo apt install default-jdk
 javapath=$(update-alternatives --query java | grep "Value: " | cut -c8-)
 echo "JAVA_HOME=${javapath:0:-4}" | sudo tee -a /etc/environment
 source /etc/environment
@@ -39,11 +39,11 @@ source /etc/environment
 # Install Git #
 ###############
 # -Source: https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-18-04
-sudo apt-get install git
+sudo apt install git
 git config --global user.name "Edwin Mantilla"
 git config --global user.email "hackpro.ems@gmail.com"
 
-sudo apt-get install git-cola
+sudo apt install git-cola
 
 
 ##############################
@@ -83,8 +83,8 @@ nvm use default
 # -Prerequisites: Install NodeJs
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-sudo apt-get update
-sudo apt-get install --no-install-recommends yarn
+sudo apt update
+sudo apt install --no-install-recommends yarn
 
 
 ##############################
@@ -94,8 +94,8 @@ curl -o /tmp/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc
 gpg --dearmor -o /tmp/microsoft.gpg /tmp/microsoft.asc
 sudo install -o root -g root -m 644 /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/
 sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-sudo apt-get update
-sudo apt-get install code
+sudo apt update
+sudo apt install code
 sudo update-alternatives --set editor /usr/bin/code
 extensions="uvbrain.angular2
     angular.ng-template
@@ -126,13 +126,13 @@ for e in $extensions; do code --install-extension $e; done
 # Install PostgreSQL #
 ######################
 # -Source: https://wiki.postgresql.org/wiki/Apt
-sudo apt-get install postgresql postgresql-contrib
+sudo apt install postgresql postgresql-contrib
 sudo usermod postgres -aG root,ssl-cert
 curl -o /tmp/ACCC4CF8.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
 sudo apt-key add /tmp/ACCC4CF8.asc
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-sudo apt-get update
-sudo apt-get install pgadmin4
+sudo apt update
+sudo apt install pgadmin4
 
 # Configure PostgreSQL Server
 configdirs=$(pg_lsclusters -j | jq -r '.[].configdir')
@@ -157,7 +157,7 @@ done
 # Install and Configure FTP Server #
 ####################################
 # -Source: https://www.hostinger.co/tutoriales/como-configurar-servidor-ftp-en-ubuntu-vps/
-sudo apt-get install vsftpd
+sudo apt install vsftpd
 # Add Allowed ports into Ubuntu Firewall
 sudo ufw allow from any to any port 20,21,22,990,10000:10010 proto tcp
 sudo iptables -I INPUT -p tcp --destination-port 20:22 -j ACCEPT
@@ -215,7 +215,7 @@ sudo snap install vlc
 ################
 # Install 7Zip #
 ################
-sudo apt-get install p7zip-full p7zip-rar
+sudo apt install p7zip-full p7zip-rar
 
 
 #################
