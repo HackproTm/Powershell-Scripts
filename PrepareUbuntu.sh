@@ -151,6 +151,8 @@ for v in $versions; do
         sudo pg_ctlcluster $v $c restart
     done
 done
+# Check PostgreSQL services
+sudo systemctl status postgres*
 
 
 ####################################
