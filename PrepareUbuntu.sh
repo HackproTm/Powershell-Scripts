@@ -56,6 +56,35 @@ sudo mkdir -p /var/www/hackpro.co/html
 sudo chown -R $USER:$USER /var/www/hackpro.co/html
 sudo chmod -R 755 /var/www/hackpro.co
 
+# Configure Apache HTTP Server
+sudo echo -e '<html>' > /var/www/hackpro.co/html/index.html
+sudo echo -e '\t<head>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '\t\t<title>¡Bienvenido a Hackpro Team!</title>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '\t</head>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '\t<body>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '\t\t<h1>¡El proceso ha sido exitoso! ¡El bloque de servidor hackpro.co se encuentra en funcionamiento!</h1>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '\t</body>' >> /var/www/hackpro.co/html/index.html
+sudo echo -e '</html>' >> /var/www/hackpro.co/html/index.html
+
+su root
+echo -e '<VirtualHost *:80>' > /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tServerAdmin hackpro.ems@gmail.com' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tServerName hackpro.co' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tServerAlias www.hackpro.co' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tDocumentRoot /var/www/hackpro.co/html' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tErrorLog ${APACHE_LOG_DIR}/error.log' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '\tCustomLog ${APACHE_LOG_DIR}/access.log combined' >> /etc/apache2/sites-available/hackpro.co.conf
+echo -e '</VirtualHost>' >> /etc/apache2/sites-available/hackpro.co.conf
+exit
+
+sudo a2ensite hackpro.co.conf
+sudo a2dissite 000-default.conf
+
+# Check Apache services
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+sudo systemctl status apache2
+
 
 ################################
 # Install Node Version Manager #
