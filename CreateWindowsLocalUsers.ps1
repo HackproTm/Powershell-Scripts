@@ -1,7 +1,4 @@
-﻿
-
-
-Param(
+﻿Param(
   [parameter(mandatory=$true)][ValidateNotNullorEmpty()][string]$HostName,
   [parameter(mandatory=$true)][ValidateNotNullorEmpty()][string]$RootUser,
   [parameter(mandatory=$true)][ValidateNotNullorEmpty()][string]$RootPass,
