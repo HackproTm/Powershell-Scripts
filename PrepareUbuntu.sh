@@ -4,25 +4,55 @@
 # Autor: Edwin Mantilla Santamaría
 # Usage: ./PrepareUbuntu.sh
 
+DOWNLOAD_DIR="$HOME/Downloads"
+DOMAIN="hackpro.co"
+
+USER_NAME="Edwin Mantilla Santamaria"
+USER_EMAIL="hackpro.ems@gmail.com"
+USER_REGION="CO"
+USER_CITY="Bogota D.C"
+USER_COMPANY="HACKPRO TEAM"
+USER_TEAM="Developer Team"
+
+SSL_TYPE="rsa"
+SSL_SIZE="4096"
+
 
 ##########################
 # Install Pre-Requisites #
 ##########################
 # Install required packages
-sudo apt install curl ca-certificates apt-transport-https gvfs-bin sed net-tools gdebi-core jq libjson-perl
+sudo apt install wget curl ca-certificates apt-transport-https gvfs sed net-tools gdebi-core jq libjson-perl
+
+sudo apt install openssh-server
+sudo systemctl status ssh
+
 # Create SSL Certicate for hackpro.co
-sudo openssl req -x509 -nodes -days 1825 -newkey rsa:4096 -keyout /etc/ssl/private/hackpro.key -out /etc/ssl/private/hackpro.cer -subj "/C=CO/ST=Bogota D.C/L=Bogota D.C/O=HACKPRO TEAM/OU=Developer Team/emailAddress=hackpro.ems@gmail.com/CN=*.hackpro.co"
-sudo chmod -R g+r /etc/ssl/private/hackpro.key
+sudo openssl req -x509 -nodes -days 1825 -newkey "${SSL_TYPE}:${SSL_SIZE}" -keyout "/etc/ssl/private/${DOMAIN}.key" -out "/etc/ssl/private/${DOMAIN}.cer" -subj "/C=${USER_REGION}/ST=${USER_CITY}/L=${USER_CITY}/O=${USER_COMPANY}/OU=${USER_TEAM}/emailAddress=${USER_EMAIL}/CN=*.${DOMAIN}"
+sudo chmod -R g+r "/etc/ssl/private/${DOMAIN}.key"
+
+# Create SSH Key
+ssh-keygen -t "${SSL_TYPE}" -b "${SSL_SIZE}" -C "${USER_EMAIL}"
+eval "$(ssh-agent -s)"
+ssh-add "$HOME/.ssh/id_${SSL_TYPE}"
+cat "$HOME/.ssh/id_${SSL_TYPE}"
+
+ssh-keygen -f "$HOME/.ssh/id_${SSL_TYPE}.pub" -e -m PKCS8 > "$HOME/.ssh/id_${SSL_TYPE}.pem.pub"
 
 
-#######################################
-# Install GRUB Customizer and GParted #
-#######################################
+#############################################
+# Install Disk and Partition Manager Tools  #
+#############################################
 # -Source: https://launchpad.net/~danielrichter2007/+archive/ubuntu/grub-customizer
 sudo add-apt-repository ppa:danielrichter2007/grub-customizer
 sudo apt update
 sudo apt install grub-customizer
 sudo apt install gparted
+
+# -Source: https://www.omgubuntu.co.uk/2017/06/create-bootable-windows-10-usb-ubuntu
+sudo add-apt-repository ppa:tomtomtom/woeusb
+sudo apt update
+sudo apt install woeusb-frontend-wxgtk
 
 
 ################
@@ -30,8 +60,8 @@ sudo apt install gparted
 ################
 # -Source: https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04
 sudo apt install default-jdk
-javapath=$(update-alternatives --query java | grep "Value: " | cut -c8-)
-echo "JAVA_HOME=${javapath:0:-4}" | sudo tee -a /etc/environment
+JAVAPATH=$(update-alternatives --query java | grep "Value: " | cut -c8-)
+echo "JAVA_HOME=${JAVAPATH:0:-4}" | sudo tee -a /etc/environment
 source /etc/environment
 
 
@@ -40,10 +70,18 @@ source /etc/environment
 ###############
 # -Source: https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-18-04
 sudo apt install git
-git config --global user.name "Edwin Mantilla"
-git config --global user.email "hackpro.ems@gmail.com"
+git config --global user.name "${USER_NAME}"
+git config --global user.email "${USER_EMAIL}"
 
 sudo apt install git-cola
+
+
+#########################
+# Install Google Chrome #
+#########################
+FILENAME='google-chrome-stable_current_amd64.deb'
+wget "https://dl.google.com/linux/direct/${FILENAME}" --directory-prefix="${DOWNLOAD_DIR}"
+sudo dpkg --install "${DOWNLOAD_DIR}/${FILENAME}"
 
 
 ##############################
@@ -89,10 +127,10 @@ sudo systemctl status apache2
 ################################
 # Install Node Version Manager #
 ################################
-# -Source: https://github.com/creationix/nvm#install-script
-curl -o /tmp/install.sh https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh
+# -Source: https://github.com/nvm-sh/nvm#install-script
+curl -o /tmp/install.sh https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh
 bash /tmp/install.sh
-source ~/.profile
+source "$HOME/.profile"
 
 
 ##################
@@ -127,28 +165,30 @@ sudo apt update
 sudo apt install code
 sudo update-alternatives --set editor /usr/bin/code
 extensions="uvbrain.angular2
-    angular.ng-template
-    cyrilletuzi.angular-schematics
-    johnpapa.angular2
-    formulahendry.auto-close-tag
-    steoates.autoimport
-    formulahendry.auto-rename-tag
-    abusaidm.html-snippets
-    thavarajan.ionic2
-    danielehrhardt.ionic3-vs-ionview-snippets
-    vsmobile.cordova-tools
-    loiane.ionic-extension-pack
-    ionic-preview.ionic-preview
-    jgw9617.ionic2-vscode
-    pkosta2006.rxjs-snippets
-    robertohuertasm.vscode-icons
-    eg2.tslint
-    eg2.vscode-npm-script
-    donjayamanne.githistory
+  angular.ng-template
+  cyrilletuzi.angular-schematics
+  johnpapa.angular2
+  formulahendry.auto-close-tag
+  steoates.autoimport
+  formulahendry.auto-rename-tag
+  abusaidm.html-snippets
+  thavarajan.ionic2
+  danielehrhardt.ionic3-vs-ionview-snippets
+  smobile.cordova-tools
+  loiane.ionic-extension-pack
+  ionic-preview.ionic-preview
+  jgw9617.ionic2-vscode
+  pkosta2006.rxjs-snippets
+  robertohuertasm.vscode-icons
+  eg2.tslint
+  eg2.vscode-npm-script
+  donjayamanne.githistory
 	bierner.markdown-preview-github-styles
 	editorconfig.editorconfig"
 
-for e in $extensions; do code --install-extension $e; done
+for e in $extensions; do
+  code --install-extension $e;
+done
 
 
 ######################
@@ -166,19 +206,19 @@ sudo apt install pgadmin4
 # Configure PostgreSQL Server
 configdirs=$(pg_lsclusters -j | jq -r '.[].configdir')
 for c in $configdirs; do
-    sudo cp $c/postgresql.conf $c/postgresql.conf.old
-    sudo sed -i 's/#listen_addresses/listen_addresses/g' $c/postgresql.conf
-    sudo sed -i 's/ssl_cert_file = '\''\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem'\''/ssl_cert_file = '\''\/etc\/ssl\/private\/hackpro.cer'\''/g' $c/postgresql.conf
-    sudo sed -i 's/ssl_key_file = '\''\/etc\/ssl\/private\/ssl-cert-snakeoil.key'\''/ssl_key_file = '\''\/etc\/ssl\/private\/hackpro.key'\''/g' $c/postgresql.conf
+  sudo cp $c/postgresql.conf $c/postgresql.conf.old
+  sudo sed -i 's/#listen_addresses/listen_addresses/g' $c/postgresql.conf
+  sudo sed -i 's/ssl_cert_file = '\''\/etc\/ssl\/certs\/ssl-cert-snakeoil.pem'\''/ssl_cert_file = '\''\/etc\/ssl\/private\/hackpro.cer'\''/g' $c/postgresql.conf
+  sudo sed -i 's/ssl_key_file = '\''\/etc\/ssl\/private\/ssl-cert-snakeoil.key'\''/ssl_key_file = '\''\/etc\/ssl\/private\/hackpro.key'\''/g' $c/postgresql.conf
 done
 
 # Restart PostgreSQL services
 versions=$(pg_lsclusters -j | jq -r '.[].version')
 for v in $versions; do
-    clusters=$(pg_lsclusters -j $v| jq -r '.[].cluster')
-    for c in $clusters; do
-        sudo pg_ctlcluster $v $c restart
-    done
+  clusters=$(pg_lsclusters -j $v| jq -r '.[].cluster')
+  for c in $clusters; do
+    sudo pg_ctlcluster $v $c restart
+  done
 done
 # Check PostgreSQL services
 sudo systemctl status postgres*
@@ -256,3 +296,123 @@ sudo apt install p7zip-full p7zip-rar
 #################
 curl -o /tmp/slack-desktop-3.3.3-amd64.deb https://downloads.slack-edge.com/linux_releases/slack-desktop-3.3.3-amd64.deb
 sudo gdebi /tmp/slack-desktop-3.3.3-amd64.deb
+
+
+#####################
+# Install RetroArch #
+#####################
+sudo add-apt-repository ppa:libretro/stable
+sudo apt update
+sudo apt install retroarch
+
+
+###################
+# Install AnyDesk #
+###################
+wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | apt-key add -
+sudo echo "deb http://deb.anydesk.com/ all main" > /etc/apt/sources.list.d/anydesk-stable.list
+sudo apt update
+sudo apt install anydesk
+
+
+#########################
+# Install Brave Browser #
+#########################
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+sudo apt update
+sudo apt install brave-browser
+
+
+##################
+# Install Stacer #
+##################
+sudo add-apt-repository ppa:oguzhaninan/stacer
+sudo apt update
+sudo apt install stacer
+
+
+####################
+# Install OpenShot #
+####################
+sudo add-apt-repository ppa:openshot.developers/ppa
+sudo apt update
+sudo apt install openshot-qt python3-openshot
+
+
+#######################
+# Install qBittorrent #
+#######################
+sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable
+sudo apt update
+sudo apt install qbittorrent
+
+
+######################
+# Change Default Mic #
+######################
+# Edit .profile file
+MIC_NAME='Redragon'
+MIC_INFO=$(pactl list short sources | awk '/alsa_input./ { print $2 }' | grep "${MIC_NAME}")
+if [ -n "${MIC_INFO}" ]; then
+  pactl set-default-source "${MIC_INFO}"
+fi
+
+
+##################
+# Install lsyncd #
+##################
+# Live Syncing Deamon
+# -Source: https://github.com/lsyncd/lsyncd/blob/master/INSTALL
+sudo apt install lua5.3 liblua5.3-0 liblua5.3-dev
+sudo mkdir -m 777 /opt/lsyncd
+cd /opt/lsyncd
+git clone git@github.com:lsyncd/lsyncd.git
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+
+
+###################
+# Install Calibre #
+###################
+# Book Reader
+# -Source: https://calibre-ebook.com/es_MX/download_linux
+sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
+
+
+#####################
+# Install Filezilla #
+#####################
+# -Source: https://filezillapro.com/docs/v3/basic-usage-instructions/install-filezilla-pro-on-debian-linux
+FILENAME='FileZilla_3.60.1_x86_64-linux-gnu.tar.bz2'
+curl -o /tmp/${FILENAME} https://dl4.cdn.filezilla-project.org/client/${FILENAME}?h=AZF3xQTeW6zgyoHsJpgovw&x=1657816654
+sudo tar xvf /tmp/${FILENAME} -C /opt
+sudo sed -i 's/#anonymous_enable/anonymous_enable/g' /opt/FileZilla3/share/applications/filezilla.desktop
+sudo cp /opt/FileZilla3/share/applications/filezilla.desktop /usr/local/share/applications/
+
+#########################
+# Install AWS Workspace #
+#########################
+# -Source: https://clients.amazonworkspaces.com/linux-install
+wget -q -O - https://workspaces-client-linux-public-key.s3-us-west-2.amazonaws.com/ADB332E7.asc | sudo apt-key add -
+echo "deb [arch=amd64] https://d3nt0h4h6pmmc4.cloudfront.net/ubuntu bionic main" | sudo tee /etc/apt/sources.list.d/amazon-workspaces-clients.list
+sudo apt update
+sudo apt install workspacesclient
+
+
+######################
+# Install KeePass XC #
+######################
+sudo apt install keepassxc
+
+
+#################
+# Install Teams #
+#################
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/ms-teams stable main" > /etc/apt/sources.list.d/teams.list'
+sudo apt update
+sudo apt install teams
