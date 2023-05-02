@@ -485,6 +485,7 @@ sudo systemctl start lsyncd
 sudo systemctl enable lsyncd
 sudo systemctl status lsyncd
 
+
 ###################
 # Install Calibre #
 ###################
@@ -557,6 +558,7 @@ sudo apt-add-repository ppa:remmina-ppa-team/remmina-next
 sudo apt update
 sudo apt install remmina remmina-plugin-rdp remmina-plugin-secret
 
+
 #####################
 # Install Flameshot #
 #####################
@@ -571,6 +573,7 @@ echo "deb https://download.mono-project.com/repo/ubuntu vs-bionic main" | sudo t
 sudo apt update
 sudo apt install monodevelop
 
+
 #################
 # Install CopyQ #
 #################
@@ -578,3 +581,20 @@ sudo apt install software-properties-common python-software-properties
 sudo add-apt-repository ppa:hluk/copyq
 sudo apt update
 sudo apt install copyq
+
+
+#######################
+# Install Virtual Box #
+#######################
+install_repository_keys "oracle-virtualbox-2016.gpg" "https://www.virtualbox.org/download/oracle_vbox_2016.asc" "virtualbox.list" "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian jammy contrib"
+
+sudo apt update
+sudo apt install virtualbox-6.1
+
+
+
+###############
+# Set Aliases #
+###############
+# Check ports open in an Ip address
+nc -z -v -w 5 "$IpAddress" 1-65535 2>&1 | grep -vE 'Connection refused|timed out'
