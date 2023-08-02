@@ -64,6 +64,10 @@ function install_repository_keys {
 # Install required packages
 sudo apt install apt-transport-https ca-certificates curl dirmngr gdebi-core gvfs jq libjson-perl net-tools sed software-properties-common wget
 
+###########################
+# Install Package Manager #
+###########################
+sudo apt install synaptic
 
 #############################
 # Install and Configure SSH #
@@ -151,6 +155,7 @@ sudo ufw allow "Apache Full"
 sudo mkdir -p "/var/www/${DOMAIN}/html"
 sudo chown -R "${USER}:${USER}" "/var/www/${DOMAIN}/html"
 sudo chmod -R 755 "/var/www/${DOMAIN}"
+APACHE_LOG_DIR="/var/log/apache2"
 
 # Configure Apache HTTP Server
 sudo sh -c "cat <<EOT > /var/www/${DOMAIN}/html/index.html
@@ -282,15 +287,11 @@ done
 sudo apt install postgresql postgresql-contrib
 sudo usermod postgres -aG root,ssl-cert
 
-KEY_NAME="microsoft"
-curl -sS -o "${TEMP_DIR}/${KEY_NAME}.asc" "https://packages.microsoft.com/keys/microsoft.asc"
+KEY_NAME="postgresql"
+curl -sS -o "${TEMP_DIR}/${KEY_NAME}.asc" "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
 gpg --dearmor -o "${TEMP_DIR}/${KEY_NAME}.gpg" "${TEMP_DIR}/${KEY_NAME}.asc"
 sudo install -o root -g root -m 644 "${TEMP_DIR}/${KEY_NAME}.gpg" "${KEYS_DIR}"
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" | sudo tee "${SOURCES_DIR}/vscode.list"
-
-curl -sS -o "${TEMP_DIR}/ACCC4CF8.asc" "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
-sudo apt-key add /tmp/ACCC4CF8.asc
-sudo sh -c "echo ""deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main"" > /etc/apt/sources.list.d/pgdg.list"
+echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee "${SOURCES_DIR}/pgdg.list"
 sudo apt update
 sudo apt install pgadmin4
 
@@ -598,3 +599,6 @@ sudo apt install virtualbox-6.1
 ###############
 # Check ports open in an Ip address
 nc -z -v -w 5 "$IpAddress" 1-65535 2>&1 | grep -vE 'Connection refused|timed out'
+
+# List All Ips available into a Network
+nmap -sn 192.168.0.0/24
