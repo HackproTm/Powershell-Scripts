@@ -61,7 +61,6 @@ function install_repository_keys {
 ##########################
 # Install Pre-Requisites #
 ##########################
-# Install required packages
 sudo apt install apt-transport-https ca-certificates curl dirmngr gdebi-core gvfs jq libjson-perl net-tools sed software-properties-common wget
 
 ###########################
@@ -220,9 +219,8 @@ nvm use --lts
 ################
 # -Source: https://yarnpkg.com/en/docs/install#debian-stable
 # -Prerequisites: Install NodeJs
-install_repository_keys "yarnpkg.gpg" "https://dl.yarnpkg.com/debian/pubkey.gpg"
-
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee "${SOURCES_DIR}/yarn.list"
+KEY_NAME="yarnpkg.gpg"
+install_repository_keys "${KEY_NAME}" "https://dl.yarnpkg.com/debian/pubkey.gpg" "yarn.list" "deb https://dl.yarnpkg.com/debian/ stable main"
 sudo apt update
 sudo apt install --no-install-recommends yarn
 
@@ -230,11 +228,8 @@ sudo apt install --no-install-recommends yarn
 ##############################
 # Install Visual Studio Code #
 ##############################
-KEY_NAME="microsoft"
-curl -sS -o "${TEMP_DIR}/${KEY_NAME}.asc" "https://packages.microsoft.com/keys/microsoft.asc"
-gpg --dearmor -o "${TEMP_DIR}/${KEY_NAME}.gpg" "${TEMP_DIR}/${KEY_NAME}.asc"
-sudo install -o root -g root -m 644 "${TEMP_DIR}/${KEY_NAME}.gpg" "${KEYS_DIR}"
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" | sudo tee "${SOURCES_DIR}/vscode.list"
+KEY_NAME="microsoft.gpg" 
+install_repository_keys "${KEY_NAME}" "https://packages.microsoft.com/keys/microsoft.asc" "vscode.list" "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
 sudo apt update
 sudo apt install code
 sudo update-alternatives --set editor /usr/bin/code
@@ -287,11 +282,8 @@ done
 sudo apt install postgresql postgresql-contrib
 sudo usermod postgres -aG root,ssl-cert
 
-KEY_NAME="postgresql"
-curl -sS -o "${TEMP_DIR}/${KEY_NAME}.asc" "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
-gpg --dearmor -o "${TEMP_DIR}/${KEY_NAME}.gpg" "${TEMP_DIR}/${KEY_NAME}.asc"
-sudo install -o root -g root -m 644 "${TEMP_DIR}/${KEY_NAME}.gpg" "${KEYS_DIR}"
-echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee "${SOURCES_DIR}/pgdg.list"
+KEY_NAME="postgresql.gpg"
+install_repository_keys "${KEY_NAME}" "https://www.postgresql.org/media/keys/ACCC4CF8.asc" "pgdg.list" "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main"
 sudo apt update
 sudo apt install pgadmin4
 
@@ -402,13 +394,9 @@ sudo apt install retroarch
 # Install AnyDesk #
 ###################
 KEY_NAME="anydesk.gpg"
-curl -sS -o "${TEMP_DIR}/temp_${KEY_NAME}" "https://keys.anydesk.com/repos/DEB-GPG-KEY"
-gpg --dearmor -o "${TEMP_DIR}/${KEY_NAME}" "${TEMP_DIR}/temp_${KEY_NAME}"
-sudo install -o root -g root -m 644 "${TEMP_DIR}/${KEY_NAME}" "/etc/apt/trusted.gpg.d/"
-echo "deb http://deb.anydesk.com/ all main" | sudo tee "/etc/apt/sources.list.d/anydesk-stable.list"
+install_repository_keys "${KEY_NAME}" "https://keys.anydesk.com/repos/DEB-GPG-KEY" "anydesk-stable.list" "deb http://deb.anydesk.com/ all main"
 sudo apt update
 sudo apt install anydesk
-rm -f "${TEMP_DIR}/anydesk*.gpg"
 
 
 #########################
@@ -602,3 +590,90 @@ nc -z -v -w 5 "$IpAddress" 1-65535 2>&1 | grep -vE 'Connection refused|timed out
 
 # List All Ips available into a Network
 nmap -sn 192.168.0.0/24
+
+alias github='cd /D/GitHub'
+alias ast='github && cd audit-devops-shared-tools'
+alias infra='github && cd deloitte-dnav-infrastructure'
+alias pipe='github && cd deloitte-dnav-infra-pipelines'
+
+alias g='git'
+alias ga='g add .'
+alias gf='g fetch --prune'
+alias gp='g pull'
+alias gpu='g push'
+alias gst='g status'
+alias gfp='gf && gp'
+
+# Add, Commit & Push all changes
+function gacp() {
+  commit_message="${1}"
+
+  ga
+  gcm "${commit_message}"
+  gpu
+}
+
+function gcb {
+  branch_name="${1}"
+
+  [[ -n "${branch_name}" ]] && g checkout "${branch_name}"
+}
+
+function gclean() {
+  gf
+
+  remote_branches=$(lrb)
+  local_branches=$(llb)
+  missing_branches=$(grep -v -f <(printf "%s\n" "${remote_branches[@]}" | sort) <(printf "%s\n" "${local_branches[@]}" | sort))
+
+  if [[ -n "${missing_branches}" ]]; then
+    while IFS= read -r line; do
+      g branch -D "${line}"
+    done <<< "${missing_branches}"
+  fi
+}
+
+function gcm {
+  commit_message="${1:-Update branch}"
+
+  g commit -a -m "${commit_message}"
+}
+
+# Get default branch name
+function gdb() {
+  upstream_name=$(gun)
+  g remote show "${upstream_name}" | awk '/HEAD branch/ {print $NF}'
+}
+
+# Create a new branch
+function gnb() {
+  branch_name="${1}"
+
+  upstream_name=$(gun)
+  g checkout -b "${branch_name}"
+  g push --set-upstream "${upstream_name}" "${branch_name}"
+}
+
+# Get the upstream name used in the repository
+function gun {
+  g remote | grep -E -o '(upstream|origin)' | tail -1
+}
+
+# List Local branches
+function llb {
+  upstream_name=$(gun)
+  g branch -vv | sed 's/^*//g' | grep "${upstream_name}" | awk '{print $1}'
+}
+
+# List Remote branches
+function lrb {
+  upstream_name=$(gun)
+  g branch -r | sed "s/${upstream_name}\///g" | awk '{print $1}'
+}
+
+# List files that contains some text in current path
+function lfwt {
+  text_to_find="${1}"
+
+  [[ -n "${text_to_find}" ]] && grep -Ril "${text_to_find}" .
+}
